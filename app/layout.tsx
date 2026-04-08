@@ -30,7 +30,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col"><Providers>{children}</Providers>
-      <Toaster position="top-center" richColors /></body>
+      <Toaster position="top-center" richColors />
+      <script src="https://checkout.razorpay.com/v1/checkout.js" async></script></body>
     </html>
   );
 }

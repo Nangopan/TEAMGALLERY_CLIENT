@@ -53,7 +53,7 @@ export async function middleware(req: NextRequest) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
     if (token.role === "product_owner") return NextResponse.redirect(new URL("/po-dashboard", req.url));
     if (token.role === "admin") return NextResponse.redirect(new URL("/admin-dashboard", req.url));
-    if (token.role === "user") return NextResponse.redirect(new URL("/user-dashboard", req.url));
+    if (token.role === "user") return NextResponse.redirect(new URL("/user/dashboard", req.url));
   }
 
   // Protect dashboards — redirect to login if not authenticated
