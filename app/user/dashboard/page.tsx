@@ -13,7 +13,7 @@ export default function UserMainDashboard() {
 
   useEffect(() => {
     fetch("http://localhost:4000/api/images", {
-      headers: { "Authorization": `Bearer ${session?.user?.accessToken}` }
+      headers: { "Authorization": `Bearer ${session?.user?.token}` }
     }).then(res => res.json()).then(data => setStats({ used: data.used, quota: data.quota }));
   }, [session]);
 

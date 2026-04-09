@@ -23,12 +23,12 @@ export default function UploadPage() {
 
     // Fetch teammates for tagging
     fetch("http://localhost:4000/api/images/members", {
-      headers: { "Authorization": `Bearer ${session.user.accessToken}` }
+      headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(setMembers);
 
     // Fetch current quota status
     fetch("http://localhost:4000/api/images", {
-      headers: { "Authorization": `Bearer ${session.user.accessToken}` }
+      headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(data => setStats({ used: data.used, quota: data.quota }));
   }, [session]);
 
@@ -59,7 +59,7 @@ export default function UploadPage() {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.user?.accessToken}` 
+          "Authorization": `Bearer ${session?.user?.token}` 
         },
         body: JSON.stringify({ files: fileData })
       });
@@ -79,7 +79,7 @@ export default function UploadPage() {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.user?.accessToken}`
+          "Authorization": `Bearer ${session?.user?.token}`
         },
         body: JSON.stringify({ 
           uploadedUrls: presignedData.map((d: any) => d.url),

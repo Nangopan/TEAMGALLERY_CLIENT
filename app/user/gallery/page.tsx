@@ -2,67 +2,113 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Eye, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Trash2, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 export default function GalleryPage() {
   const { data: session } = useSession();
   const [images, setImages] = useState([]);
-  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     if (session?.user) fetchImages();
-  }, [session, filter]);
+  }, [session]);
 
   const fetchImages = async () => {
-    const url = filter 
-      ? `http://localhost:4000/api/images?tag=${filter}` 
-      : "http://localhost:4000/api/images";
-      
-    const res = await fetch(url, {
-      headers: { "Authorization": `Bearer ${session?.user?.accessToken}` }
+    const res = await fetch("http://localhost:4000/api/images", {
+      headers: { "Authorization": `Bearer ${session?.user?.token}` }
     });
-    const data = await res.json();
-    setImages(data.images);
+    if (res.ok) {
+      const data = await res.json();
+      setImages(data.images);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:4000/api/images/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${session?.user?.accessToken}` }
+      });
+
+      if (res.ok) {
+        toast.success("Image deleted successfully");
+        setImages(images.filter((img: any) => img.id !== id)); // Remove from UI instantly
+      } else {
+        toast.error("Failed to delete image");
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting");
+    }
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Organization Gallery</h1>
-          <p className="text-muted-foreground">Browse all images uploaded by your team.</p>
-        </div>
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search by tag..." 
-            className="pl-8" 
-            value={filter} 
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
+    <div className="p-8 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Personal Gallery</h1>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {images.map((img: any) => (
+          <Card key={img.id} className="overflow-hidden group relative">
+            <CardContent className="p-0">
+              <img 
+                src={img.url} 
+                alt="Gallery item" 
+                className="aspect-square object-cover w-full group-hover:scale-105 transition-transform duration-300" 
+              />
+              
+              {/* Overlay on Hover */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                <p className="text-white text-xs font-medium mb-2">
+                  Uploaded by {img.user?.name || "Unknown"}
+                </p>
+                
+                <div className="flex gap-2">
+                  {/* 1. View Full Button (Safe Link) */}
+                  <a href={img.url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Button variant="secondary" size="sm" className="w-full">
+                      <ExternalLink className="h-4 w-4 mr-1" /> View
+                    </Button>
+                  </a>
+
+                  {/* 2. Delete Button with ShadCN Alert */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this image?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently remove the image from S3 and our database. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleDelete(img.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {images.length === 0 ? (
-          <div className="col-span-full text-center py-20 text-muted-foreground">No images found.</div>
-        ) : (
-          images.map((img: any) => (
-            <Card key={img.id} className="overflow-hidden group relative border-none shadow-md">
-              <img src={img.url} alt="Vault" className="aspect-square object-cover w-full transition-transform group-hover:scale-105" />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                <p className="text-white text-xs font-medium">Uploaded by {img.uploader.name}</p>
-                <Button size="sm" variant="secondary" className="mt-2 w-full" onClick={() => window.open(img.url, '_blank')}>
-                  <Eye className="h-4 w-4 mr-2" /> View Full
-                </Button>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+      {images.length === 0 && (
+        <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-lg">
+          No images found. Head over to the Upload page to start your gallery!
+        </div>
+      )}
     </div>
   );
 }

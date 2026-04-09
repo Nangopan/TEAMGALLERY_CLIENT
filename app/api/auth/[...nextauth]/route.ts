@@ -6,12 +6,12 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "admin@example.com" },
+        email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("🚀 NextAuth is attempting to call the backend...");
         try {
+          // Note: Ensure this port (4000) matches your Express server port!
           const res = await fetch("http://localhost:4000/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -21,45 +21,44 @@ export const authOptions: NextAuthOptions = {
             }),
           });
 
-          console.log("📥 Backend responded with status:", res.status);
           const user = await res.json();
 
+          // If backend returns the user object and a token
           if (res.ok && user) {
-            return user;
+            return user; 
           }
-          console.log("❌ Backend rejected login:", user);
           return null;
         } catch (error) {
-          console.error("💥 CRITICAL FETCH ERROR IN NEXTAUTH:", error);
+          console.error("AUTH_ERROR:", error);
           return null;
         }
       }
     })
   ],
   callbacks: {
-    // 1. Take data from backend and put it into the JWT token
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.organization_id = user.organization_id;
-        token.accessToken = user.token; 
-    }
+        token.id = (user as any).id;
+        token.role = (user as any).role;
+        token.organization_id = (user as any).organization_id;
+        // Map the backend's 'token' property to the JWT
+        token.backendToken = (user as any).token; 
+      }
       return token;
     },
-    // 2. Take data from the JWT token and expose it to the Next.js session
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.organization_id = token.organization_id as string;
-         session.user.accessToken = token.accessToken as string; 
-    }
+        (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
+        (session.user as any).organization_id = token.organization_id;
+        // Sync this name with your frontend (session.user.token)
+        (session.user as any).token = token.backendToken; 
+      }
       return session;
     }
   },
   pages: {
-    signIn: '/login', // Tells NextAuth to use our custom ShadCN login page
+    signIn: '/login',
   },
   session: {
     strategy: "jwt",
