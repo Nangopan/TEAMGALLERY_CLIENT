@@ -55,13 +55,13 @@ export default function NotificationBell() {
     <Popover>
       <PopoverTrigger asChild>
         <button className="relative p-2 rounded-full hover:bg-white/10 transition-all group">
-  <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
-  {unreadCount > 0 && (
-    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-indigo-500">
-      {unreadCount}
-    </span>
-  )}
-</button>
+          <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-indigo-500">
+              {unreadCount}
+            </span>
+          )}
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 rounded-[2rem] overflow-hidden shadow-2xl border-violet-100" align="end">
         <div className="bg-violet-600 p-4 text-white flex justify-between items-center">
@@ -72,7 +72,7 @@ export default function NotificationBell() {
             </Button>
           )}
         </div>
-        
+
         <div className="max-h-[400px] overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-10 text-center space-y-2">
@@ -81,8 +81,8 @@ export default function NotificationBell() {
             </div>
           ) : (
             notifications.map((n: any) => (
-              <div 
-                key={n.id} 
+              <div
+                key={n.id}
                 className={`p-4 border-b border-zinc-50 last:border-0 flex gap-3 transition-colors ${!n.is_read ? 'bg-violet-50/50' : 'hover:bg-zinc-50'}`}
               >
                 <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${!n.is_read ? 'bg-violet-600' : 'bg-transparent'}`} />

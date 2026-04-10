@@ -27,6 +27,10 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+     if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+
     const result = await signIn("credentials", {
       email,
       password,

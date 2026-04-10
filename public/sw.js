@@ -1,5 +1,5 @@
-// public/sw.js
-self.addEventListener('push', function(event) {
+public / sw.js
+self.addEventListener('push', function (event) {
   if (!event.data) return;
 
   const data = event.data.json();
@@ -23,11 +23,35 @@ self.addEventListener('push', function(event) {
   );
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  
+
   // Open the gallery page when clicked
   event.waitUntil(
     clients.openWindow(event.notification.data.url)
   );
 });
+
+// const channel = new BroadcastChannel('notification-sync');
+
+// self.addEventListener('push', function(event) {
+//   if (!event.data) return;
+
+//   const data = event.data.json();
+
+//   // 🟢 Add this line right here to alert the frontend
+//   channel.postMessage({ type: 'REFRESH_NOTIFICATIONS' });
+
+//   const options = {
+//     body: data.message,
+//     icon: '/logo.png',
+//     image: data.image,
+//     badge: '/badge.png',
+//     data: { url: data.url || '/user/gallery' },
+//     vibrate: [100, 50, 100],
+//   };
+
+//   event.waitUntil(
+//     self.registration.showNotification(data.title, options)
+//   );
+// });
