@@ -6,7 +6,7 @@ self.addEventListener('push', function(event) {
 
   const options = {
     body: data.message,
-    icon: '/icon-192x192.png', // Small icon (app logo)
+    icon: '/logo.png', // Small icon (app logo)
     image: data.image,         // 🟢 THE PREVIEW IMAGE
     badge: '/badge.png',       // Status bar icon (Android)
     data: {
