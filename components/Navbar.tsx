@@ -7,6 +7,7 @@ import {
   GalleryVerticalEnd
 } from "lucide-react";
 import Link from "next/link";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -44,6 +45,8 @@ export default function Navbar() {
                 {user?.role?.replace("_", " ")}
               </div>
             </div>
+
+            <NotificationBell />
 
             {/* Logout */}
             <Button 

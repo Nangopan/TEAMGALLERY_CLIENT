@@ -5,10 +5,13 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { UploadCloud, X, Loader2, UserPlus } from "lucide-react";
+import { UploadCloud, X, Loader2, UserPlus,ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function UploadPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   
   // States
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -16,10 +19,11 @@ export default function UploadPage() {
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [stats, setStats] = useState({ used: 0, quota: 5 });
+  const dashboardPath = session?.user?.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
 
   // Fetch Org Members & Quota on Load
   useEffect(() => {
-    if (!session?.user?.accessToken) return;
+    if (!session?.user?.token) return;
 
     // Fetch teammates for tagging
     fetch("http://localhost:4000/api/images/members", {
@@ -90,6 +94,7 @@ export default function UploadPage() {
       toast.success("Images uploaded and team notified!");
       setSelectedFiles([]);
       setTaggedUsers([]);
+      router.refresh();
       // Refresh local quota
       setStats(prev => ({ ...prev, used: prev.used + selectedFiles.length }));
     } catch (err) {
@@ -101,6 +106,12 @@ export default function UploadPage() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
+      <Link 
+        href={dashboardPath} 
+        className="flex items-center gap-2 text-zinc-500 hover:text-violet-600 transition-colors w-fit font-bold text-sm uppercase tracking-widest"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      </Link>
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Upload Images</h1>
         <p className="text-muted-foreground">Add new photos to your organization's vault.</p>

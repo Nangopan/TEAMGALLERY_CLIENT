@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react"; // Added
-import { useRouter } from "next/navigation"; // Added
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { CreditCard, Loader2 } from "lucide-react"; // Added Loader2
+import { CreditCard, Loader2, AlertCircle,ArrowLeft, } from "lucide-react"; // Added AlertCircle
+import Link from "next/link";
 
 export default function PaymentPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false); // Added
+  const [isLoading, setIsLoading] = useState(false);
+  // 🟢 Added state to track if a payment has failed previously
+  const [isRetry, setIsRetry] = useState(false); 
+  const dashboardPath = session?.user?.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
 
   const handlePayment = async () => {
     setIsLoading(true);
@@ -30,7 +34,6 @@ export default function PaymentPage() {
         name: "TeamGallery",
         description: "Buy 5 Extra Image Slots",
         handler: async function (response: any) {
-          // ACTUAL VERIFICATION CALL
           const verifyRes = await fetch("http://localhost:4000/api/payments/verify", {
             method: "POST",
             headers: { 
@@ -44,6 +47,7 @@ export default function PaymentPage() {
             toast.success("Payment Successful! Quota updated.");
             router.push("/user/dashboard");
           } else {
+            setIsRetry(true); // 🟢 Set retry on verification failure
             toast.error("Verification failed.");
           }
         },
@@ -59,6 +63,10 @@ export default function PaymentPage() {
 
       rzp.on('payment.failed', async function (response: any) {
         toast.error("Payment Failed: " + response.error.description);
+        
+        // 🟢 Set retry state to true
+        setIsRetry(true); 
+
         await fetch("http://localhost:4000/api/payments/fail", {
           method: "POST",
           headers: { 
@@ -78,23 +86,39 @@ export default function PaymentPage() {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <Link 
+        href={dashboardPath} 
+        className="flex items-center gap-2 text-zinc-500 hover:text-violet-600 transition-colors w-fit font-bold text-sm uppercase tracking-widest"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      </Link>
       <Card className="border-2 border-blue-100 rounded-[2rem] shadow-sm">
         <CardHeader className="text-center">
           <div className="mx-auto bg-blue-50 p-3 rounded-full w-fit mb-4">
-            <CreditCard className="h-8 w-8 text-blue-600" />
+            {isRetry ? (
+              <AlertCircle className="h-8 w-8 text-amber-500 animate-pulse" />
+            ) : (
+              <CreditCard className="h-8 w-8 text-blue-600" />
+            )}
           </div>
-          <CardTitle className="text-2xl font-bold">Upgrade Your Vault</CardTitle>
-          <CardDescription>Get more space for your team's memories.</CardDescription>
+          <CardTitle className="text-2xl font-bold">
+            {isRetry ? "Payment Failed" : "Upgrade Your Vault"}
+          </CardTitle>
+          <CardDescription>
+            {isRetry 
+              ? "Something went wrong. Please try again to upgrade your slots." 
+              : "Get more space for your team's memories."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="bg-zinc-50 p-6 rounded-2xl text-center border">
+          <div className={`p-6 rounded-2xl text-center border transition-colors ${isRetry ? 'bg-amber-50 border-amber-100' : 'bg-zinc-50 border-zinc-100'}`}>
             <h4 className="text-4xl font-black text-zinc-900">₹100</h4>
             <p className="text-sm text-zinc-500 mt-2">+5 Additional Image Slots</p>
           </div>
           
           <Button 
-            className="w-full h-12 text-lg bg-violet-600 hover:bg-violet-700 rounded-xl transition-all" 
+            className={`w-full h-12 text-lg rounded-xl transition-all ${isRetry ? 'bg-amber-600 hover:bg-amber-700' : 'bg-violet-600 hover:bg-violet-700'}`} 
             onClick={handlePayment}
             disabled={isLoading}
           >
@@ -104,7 +128,8 @@ export default function PaymentPage() {
                 Processing...
               </>
             ) : (
-              "Pay Now"
+              // 🟢 Conditional Button Text
+              isRetry ? "Retry Payment" : "Pay Now"
             )}
           </Button>
           

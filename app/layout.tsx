@@ -5,6 +5,8 @@ import { Providers } from "./provider";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar"; // 1. Import Navbar
 import Footer from "@/components/Footer"; // 2. Import Footer
+import PushSubscriptionManager from "@/components/PushSubscriptionManager";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +36,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
         <Providers>
           {/* 3. Navbar appears at the very top */}
+          <PushSubscriptionManager />
           <Navbar />
 
           {/* 4. Main wrapper with flex-grow pushes footer down */}

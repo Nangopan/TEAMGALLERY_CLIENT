@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Image as ImageIcon, UserPlus, Grid3X3 } from "lucide-react";
 import Link from "next/link";
+import { ShieldAlert,Lock } from "lucide-react"; 
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 export default function AdminOverview() {
   const { data: session } = useSession();
@@ -35,6 +37,12 @@ export default function AdminOverview() {
         
         {/* ACTION BUTTONS */}
         <div className="flex items-center gap-3">
+         <ChangePasswordModal>
+    <Button variant="outline" className="rounded-xl border-zinc-200 text-zinc-600 hover:bg-zinc-50">
+      <Lock className="w-4 h-4 mr-2" /> Change Password
+    </Button>
+  </ChangePasswordModal>
+
           <Button asChild variant="outline" className="rounded-xl border-violet-200 text-violet-700 hover:bg-violet-50">
             <Link href="/admin/gallery">
               <Grid3X3 className="w-4 h-4 mr-2" /> View Gallery

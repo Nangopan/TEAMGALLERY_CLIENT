@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link"; 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { UploadCloud, Loader2, Copy, CheckCircle2 } from "lucide-react";
+import { UploadCloud, Loader2, Copy, CheckCircle2,ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -51,56 +52,70 @@ export default function CreateOrgPage() {
     toast.success("Copied to clipboard!");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    try {
-      let finalLogoUrl = null;
+  try {
+    let finalLogoUrl = null;
 
-      // 1. S3 Upload Logic
-      if (file) {
-        const preRes = await fetch("http://localhost:4000/api/organisations/presign", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${session?.user?.token}` 
-          },
-          body: JSON.stringify({ fileName: file.name, fileType: file.type })
-        });
-        const { uploadUrl, url } = await preRes.json();
-        await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-        finalLogoUrl = url;
-      }
-
-      // 2. Create Org
-      const orgRes = await fetch("http://localhost:4000/api/organisations", {
+    // 1. S3 Upload Logic (Remains the same)
+    if (file) {
+      const preRes = await fetch("http://localhost:4000/api/organisations/presign", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json", 
           "Authorization": `Bearer ${session?.user?.token}` 
         },
-        body: JSON.stringify({ ...formData, logo_url: finalLogoUrl })
+        body: JSON.stringify({ fileName: file.name, fileType: file.type })
       });
-
-      if (!orgRes.ok) throw new Error(await orgRes.text());
-
-      const data = await orgRes.json();
-
-      // 3. Show Success Modal
-      setCredentials({ email: formData.adminEmail, password: data.tempPassword });
-      setShowModal(true);
-
-    } catch (err: any) {
-      console.error("Creation Error:", err);
-      toast.error("Failed to create organization.");
-    } finally {
-      setIsLoading(false);
+      
+      if (!preRes.ok) throw new Error("Logo upload initialization failed.");
+      
+      const { uploadUrl, url } = await preRes.json();
+      await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      finalLogoUrl = url;
     }
-  };
+
+    // 2. Create Org
+    const orgRes = await fetch("http://localhost:4000/api/organisations", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": `Bearer ${session?.user?.token}` 
+      },
+      body: JSON.stringify({ ...formData, logo_url: finalLogoUrl })
+    });
+
+    // 🟢 NEW ERROR HANDLING LOGIC
+    if (!orgRes.ok) {
+      const errorData = await orgRes.json(); // Parse the JSON error from backend
+      throw new Error(errorData.error || "Failed to create organization"); 
+    }
+
+    const data = await orgRes.json();
+
+    // 3. Show Success Modal
+    setCredentials({ email: formData.adminEmail, password: data.tempPassword });
+    setShowModal(true);
+
+  } catch (err: any) {
+    console.error("Creation Error:", err);
+    // 🟢 TOAST THE ACTUAL ERROR MESSAGE
+    toast.error(err.message); 
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
+       <Link 
+        href={"/po/dashboard"} 
+        className="flex items-center gap-2 text-zinc-500 hover:text-violet-600 transition-colors w-fit font-bold text-sm uppercase tracking-widest"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      </Link>
       {/* SUCCESS MODAL */}
       <Dialog open={showModal} onOpenChange={(open) => {
         if (!open) router.push("/po/dashboard");
