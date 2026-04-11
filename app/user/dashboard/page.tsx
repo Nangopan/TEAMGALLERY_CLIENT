@@ -56,9 +56,8 @@ export default function UserMainDashboard() {
   }, [session, status]);
 
   const percentage = Math.min((stats.used / stats.quota) * 100, 100);
-  const strokeDasharray = 251.2; // 2 * pi * r (r=40)
-  const strokeDashoffset = strokeDasharray - (percentage / 100) * strokeDasharray;
-
+ const strokeDasharray = 502.6; 
+const strokeDashoffset = strokeDasharray - (percentage / 100) * strokeDasharray;
   if (status === "loading" || fetching) {
     return (
       <div className="flex justify-center items-center h-[70vh]">

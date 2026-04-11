@@ -11,7 +11,7 @@ import {
   EyeOff, 
   GalleryVerticalEnd, 
   Loader2, 
-  Lock 
+  Lock ,AlertCircle
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -21,11 +21,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ email: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({ email: "" });
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldErrors({ email: "Please enter a valid email address." });
+      setLoading(false);
+      return;
+    }
 
      if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
@@ -91,13 +99,16 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required
-                className="h-12 border-zinc-200 rounded-2xl bg-zinc-50/50 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all"
-              />
+                className={`h-12 border-zinc-200 rounded-2xl bg-zinc-50/50 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all ${fieldErrors.email ? 'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20' : ''}`}/>
+           {fieldErrors.email && (
+                <p className="text-[11px] text-red-500 font-bold flex items-center gap-1 ml-1 animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle size={12} /> {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2.5">

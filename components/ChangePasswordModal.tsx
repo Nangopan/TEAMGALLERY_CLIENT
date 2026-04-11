@@ -27,69 +27,69 @@ export default function ChangePasswordModal({ children }: { children: React.Reac
     return re.test(email);
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // 🟢 Reset previous errors
-    setErrors({ currentEmail: "", currentPassword: "", newPassword: "" });
-    let hasError = false;
-    const newErrors = { currentEmail: "", currentPassword: "", newPassword: "" };
+// Inside ChangePasswordModal.tsx 
 
-    // 🟢 Client-side Validations
-    if (!validateEmail(form.currentEmail)) {
-      newErrors.currentEmail = "Please enter a valid email address.";
-      hasError = true;
-    }
-    if (form.currentPassword.length < 1) {
-      newErrors.currentPassword = "Current password is required.";
-      hasError = true;
-    }
-    if (form.newPassword.length < 6) {
-      newErrors.newPassword = "New password must be at least 6 characters.";
-      hasError = true;
-    }
+const handleUpdate = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  setErrors({ currentEmail: "", currentPassword: "", newPassword: "" });
+  let hasError = false;
+  const newErrors = { currentEmail: "", currentPassword: "", newPassword: "" };
 
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
+  // 🟢 Trim the email for validation
+  const trimmedEmail = form.currentEmail.trim();
 
-    setLoading(true);
+  if (!validateEmail(trimmedEmail)) {
+    newErrors.currentEmail = "Please enter a valid email address.";
+    hasError = true;
+  }
+  
+  // ... (rest of your length validations)
 
-    try {
-      const res = await fetch("http://localhost:4000/api/users/change-password", {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.user?.token}` 
-        },
-        body: JSON.stringify(form)
-      });
+  if (hasError) {
+    setErrors(newErrors);
+    return;
+  }
 
-      const data = await res.json();
+  setLoading(true);
 
-      if (res.ok) {
-        toast.success("Security updated successfully!");
-        setOpen(false);
-        setForm({ currentEmail: "", currentPassword: "", newPassword: "" });
+  try {
+    const res = await fetch("http://localhost:4000/api/users/change-password", {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session?.user?.token}` 
+      },
+      // 🟢 Send trimmed data to backend
+      body: JSON.stringify({
+        ...form,
+        currentEmail: trimmedEmail
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      toast.success("Security updated successfully!");
+      setOpen(false);
+      setForm({ currentEmail: "", currentPassword: "", newPassword: "" });
+    } else {
+      // Logic for displaying field-specific errors remains the same
+      const errorMessage = data.error || "Update failed.";
+      if (errorMessage.toLowerCase().includes("email")) {
+        setErrors(prev => ({ ...prev, currentEmail: errorMessage }));
+      } else if (errorMessage.toLowerCase().includes("current password")) {
+        setErrors(prev => ({ ...prev, currentPassword: errorMessage }));
       } else {
-        // 🟢 Map backend errors back to specific fields
-        const errorMessage = data.error || "Update failed.";
-        
-        if (errorMessage.toLowerCase().includes("email")) {
-          setErrors(prev => ({ ...prev, currentEmail: errorMessage }));
-        } else if (errorMessage.toLowerCase().includes("current password")) {
-          setErrors(prev => ({ ...prev, currentPassword: errorMessage }));
-        } else {
-          toast.error(errorMessage);
-        }
+        toast.error(errorMessage);
       }
-    } catch (err) {
-      toast.error("Network error. Please try again later.");
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    toast.error("Network error. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={(val) => {

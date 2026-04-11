@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { UploadCloud, X, Loader2, UserPlus,ArrowLeft } from "lucide-react";
+import { UploadCloud, X, Loader2, UserPlus, ArrowLeft, AlertCircle } from "lucide-react"; // 🟢 Added AlertCircle
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -19,45 +19,58 @@ export default function UploadPage() {
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [stats, setStats] = useState({ used: 0, quota: 5 });
+  
+  // 🟢 NEW: Error state for file validation
+  const [fileError, setFileError] = useState("");
+
   const dashboardPath = session?.user?.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
 
   // Fetch Org Members & Quota on Load
   useEffect(() => {
     if (!session?.user?.token) return;
 
-    // Fetch teammates for tagging
     fetch("http://localhost:4000/api/images/members", {
       headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(setMembers);
 
-    // Fetch current quota status
     fetch("http://localhost:4000/api/images", {
       headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(data => setStats({ used: data.used, quota: data.quota }));
   }, [session]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(""); // 🟢 Reset error on new selection
+    
     if (e.target.files) {
-      const filesArray = Array.from(e.target.files).filter(f => f.type.startsWith("image/"));
-      const remainingSlots = stats.quota - stats.used;
+      const rawFiles = Array.from(e.target.files);
+      
+      // 🟢 Validation: Identify non-image files
+      const invalidFiles = rawFiles.filter(f => !f.type.startsWith("image/"));
+      const validImages = rawFiles.filter(f => f.type.startsWith("image/"));
 
-      if (selectedFiles.length + filesArray.length > remainingSlots) {
+      if (invalidFiles.length > 0) {
+        setFileError("Only image files (PNG, JPG, JPEG) are permitted.");
+        return; 
+      }
+
+      const remainingSlots = stats.quota - stats.used;
+      if (selectedFiles.length + validImages.length > remainingSlots) {
         toast.error(`Quota limit! You only have ${remainingSlots} slots left.`);
         return;
       }
 
-      setSelectedFiles(prev => [...prev, ...filesArray]);
+      setSelectedFiles(prev => [...prev, ...validImages]);
     }
   };
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    if (selectedFiles.length <= 1) setFileError(""); // Clear error if all files removed
   };
 
   const handleUpload = async () => {
     setIsUploading(true);
     try {
-      // 1. Get Presigned URLs
       const fileData = selectedFiles.map(f => ({ name: f.name, type: f.type }));
       const presignRes = await fetch("http://localhost:4000/api/images/presign", {
         method: "POST",
@@ -69,7 +82,6 @@ export default function UploadPage() {
       });
       const presignedData = await presignRes.json();
 
-      // 2. Upload to S3
       await Promise.all(presignedData.map(async (item: any, i: number) => {
         await fetch(item.uploadUrl, {
           method: "PUT",
@@ -78,7 +90,6 @@ export default function UploadPage() {
         });
       }));
 
-      // 3. Save to DB with Tagged Users
       await fetch("http://localhost:4000/api/images", {
         method: "POST",
         headers: { 
@@ -95,7 +106,6 @@ export default function UploadPage() {
       setSelectedFiles([]);
       setTaggedUsers([]);
       router.refresh();
-      // Refresh local quota
       setStats(prev => ({ ...prev, used: prev.used + selectedFiles.length }));
     } catch (err) {
       toast.error("Upload failed.");
@@ -112,13 +122,13 @@ export default function UploadPage() {
       >
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </Link>
+      
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Upload Images</h1>
         <p className="text-muted-foreground">Add new photos to your organization's vault.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Selection & Tagging */}
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
@@ -154,10 +164,9 @@ export default function UploadPage() {
           </Card>
         </div>
 
-        {/* Right: The Preview Grid */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           <div 
-            className="border-2 border-dashed rounded-xl p-12 text-center hover:bg-gray-50 hover:border-blue-400 transition-all cursor-pointer relative"
+            className={`border-2 border-dashed rounded-xl p-12 text-center hover:bg-gray-50 transition-all cursor-pointer relative ${fileError ? 'border-red-500 bg-red-50/10' : 'border-gray-200 hover:border-blue-400'}`}
           >
             <input 
               type="file" 
@@ -166,10 +175,17 @@ export default function UploadPage() {
               onChange={handleFileChange} 
               accept="image/*" 
             />
-            <UploadCloud className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <UploadCloud className={`h-12 w-12 mx-auto mb-4 ${fileError ? 'text-red-400' : 'text-gray-400'}`} />
             <h3 className="text-lg font-medium">Click to browse or drag and drop</h3>
             <p className="text-sm text-gray-500">PNG, JPG, or JPEG (Max remaining: {stats.quota - stats.used})</p>
           </div>
+          
+          {/* 🟢 Inline Validation Error Message */}
+          {fileError && (
+            <p className="text-[11px] text-red-500 font-bold flex items-center gap-1 ml-2 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle size={12} /> {fileError}
+            </p>
+          )}
 
           {selectedFiles.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
