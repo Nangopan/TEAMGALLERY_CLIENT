@@ -83,7 +83,7 @@ export default function CreateOrgPage() {
     try {
       let finalLogoUrl = null;
       if (file) {
-        const preRes = await fetch("http://localhost:4000/api/organisations/presign", {
+        const preRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations/presign`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json", 
@@ -97,7 +97,7 @@ export default function CreateOrgPage() {
         finalLogoUrl = url;
       }
 
-      const orgRes = await fetch("http://localhost:4000/api/organisations", {
+      const orgRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json", 

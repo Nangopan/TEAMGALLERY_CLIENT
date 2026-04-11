@@ -26,7 +26,7 @@ export default function PODashboard() {
   }, [session, status]);
  const fetchOrgs = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/organisations", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations`, {
         headers: { 
           // 🚨 FIX: Use .token to match the NextAuth fix we did earlier
           "Authorization": `Bearer ${session?.user?.token}` 

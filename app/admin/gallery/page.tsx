@@ -33,7 +33,7 @@ export default function AdminGallery() {
 
   useEffect(() => {
     if (session?.user?.token) {
-      fetch("http://localhost:4000/api/images/members", {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/members`, {
         headers: { "Authorization": `Bearer ${session.user.token}` }
       })
       .then(res => res.json())
@@ -47,7 +47,7 @@ export default function AdminGallery() {
     
     const queryParam = selectedUser !== "all" ? `?uploaderId=${selectedUser}` : "";
     
-    fetch(`http://localhost:4000/api/images${queryParam}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images${queryParam}`, {
       headers: { "Authorization": `Bearer ${session.user.token}` }
     })
     .then(res => res.json())
@@ -64,7 +64,7 @@ export default function AdminGallery() {
   const handleDelete = async (imageId: string) => {
     setIsDeleting(imageId);
     try {
-      const res = await fetch(`http://localhost:4000/api/images/${imageId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/${imageId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.user?.token}` }
       });

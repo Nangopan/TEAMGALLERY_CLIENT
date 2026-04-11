@@ -16,8 +16,8 @@ export default function AdminOverview() {
   useEffect(() => {
     if (session?.user?.token) {
       Promise.all([
-        fetch("http://localhost:4000/api/users", { headers: { "Authorization": `Bearer ${session.user.token}` } }),
-        fetch("http://localhost:4000/api/images", { headers: { "Authorization": `Bearer ${session.user.token}` } })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { headers: { "Authorization": `Bearer ${session.user.token}` } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, { headers: { "Authorization": `Bearer ${session.user.token}` } })
       ])
       .then(async ([usersRes, imagesRes]) => {
         const users = await usersRes.json();

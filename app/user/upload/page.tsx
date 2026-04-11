@@ -14,7 +14,7 @@ export default function UploadPage() {
   const router = useRouter();
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [stats, setStats] = useState({ used: 0, quota: 5 });
@@ -25,11 +25,11 @@ export default function UploadPage() {
   useEffect(() => {
     if (!session?.user?.token) return;
 
-    fetch("http://localhost:4000/api/images/members", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/members`, {
       headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(setMembers);
 
-    fetch("http://localhost:4000/api/images", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, {
       headers: { "Authorization": `Bearer ${session.user.token}` }
     }).then(res => res.json()).then(data => setStats({ used: data.used, quota: data.quota }));
   }, [session]);
@@ -74,7 +74,7 @@ export default function UploadPage() {
     setIsUploading(true);
     try {
       const fileData = selectedFiles.map(f => ({ name: f.name, type: f.type }));
-      const presignRes = await fetch("http://localhost:4000/api/images/presign", {
+      const presignRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/presign`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export default function UploadPage() {
         });
       }));
 
-      await fetch("http://localhost:4000/api/images", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

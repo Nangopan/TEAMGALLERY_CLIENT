@@ -10,13 +10,13 @@ import { toast } from "sonner";
 
 export default function NotificationBell() {
   const { data: session } = useSession();
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = async () => {
     if (!session?.user?.token) return;
     try {
-      const res = await fetch("http://localhost:4000/api/notifications", {
+      const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/notifications", {
         headers: { "Authorization": `Bearer ${session.user.token}` }
       });
       if (res.ok) {
@@ -37,7 +37,7 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/notifications/read-all", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/read-all`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${session?.user?.token}` }
       });

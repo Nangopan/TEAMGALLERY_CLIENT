@@ -30,8 +30,8 @@ export default function EditOrganisation({ params }: { params: Promise<{ id: str
 
     async function fetchOrg() {
       try {
-        const res = await fetch(`http://localhost:4000/api/organisations/${id}`, {
-          headers: { Authorization: `Bearer ${session.user.token}` },
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations/${id}`, {
+          headers: { Authorization: `Bearer ${(session as any)?.user?.token}` },
         });
         if (res.ok) {
           const data = await res.json();
@@ -61,7 +61,7 @@ export default function EditOrganisation({ params }: { params: Promise<{ id: str
 
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/organisations/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

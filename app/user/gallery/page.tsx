@@ -70,8 +70,8 @@ const ImageCard = ({ img, currentUserId, onDelete }: { img: any, currentUserId: 
 
 export default function GalleryPage() {
   const { data: session, status } = useSession();
-  const [images, setImages] = useState([]);
-  const [members, setMembers] = useState([]);
+  const [images, setImages] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [filterUserId, setFilterUserId] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -83,11 +83,11 @@ export default function GalleryPage() {
     setLoading(true);
     try {
       const [imgRes, memRes] = await Promise.all([
-        fetch("http://localhost:4000/api/images", {
-          headers: { Authorization: `Bearer ${session.token || session.user.token}` }
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, {
+          headers: { Authorization: `Bearer ${(session as any)?.token || (session as any)?.user?.token}` }
         }),
-        fetch("http://localhost:4000/api/images/members", {
-          headers: { Authorization: `Bearer ${session.token || session.user.token}` }
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/members`, {
+          headers: { Authorization: `Bearer ${(session as any).token || (session as any)?.user?.token}` }
         })
       ]);
 
@@ -130,7 +130,7 @@ export default function GalleryPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/images/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session?.user?.token}` }
       });

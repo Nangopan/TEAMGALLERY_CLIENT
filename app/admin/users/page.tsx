@@ -41,7 +41,7 @@ function UserManagementContent() {
   const [editErrors, setEditErrors] = useState({ name: "", email: "" });
 
   const fetchUsers = () => {
-    fetch("http://localhost:4000/api/users", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
       headers: { "Authorization": `Bearer ${session?.user?.token}` }
     })
     .then(res => res.json())
@@ -75,7 +75,7 @@ function UserManagementContent() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/users", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.user?.token}` },
         body: JSON.stringify({ name: formData.name, email: formData.email, tempPassword: formData.password })
@@ -104,7 +104,7 @@ function UserManagementContent() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${editFormData.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${editFormData.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.user?.token}` },
         body: JSON.stringify({ name: editFormData.name, email: editFormData.email, tempPassword: editFormData.password || undefined })
@@ -118,7 +118,7 @@ function UserManagementContent() {
   };
 
   const handleDelete = async (userId: string) => {
-    const res = await fetch(`http://localhost:4000/api/users/${userId}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`, {
       method: "DELETE",
       headers: { "Authorization": `Bearer ${session?.user?.token}` }
     });

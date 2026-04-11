@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           // Note: Ensure this port (4000) matches your Express server port!
-          const res = await fetch("http://localhost:4000/api/auth/login", {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
 
           // If backend returns the user object and a token
           if (res.ok && user) {
-            return user; 
+            return user;
           }
           return null;
         } catch (error) {
@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.organization_id = (user as any).organization_id;
         // Map the backend's 'token' property to the JWT
-        token.backendToken = (user as any).token; 
+        token.backendToken = (user as any).token;
       }
       return token;
     },
@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).organization_id = token.organization_id;
         // Sync this name with your frontend (session.user.token)
-        (session.user as any).token = token.backendToken; 
+        (session.user as any).token = token.backendToken;
       }
       return session;
     }

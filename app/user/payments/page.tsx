@@ -20,7 +20,7 @@ export default function PaymentPage() {
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/payments/order", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/order`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session?.user?.token}` }
       });
@@ -34,7 +34,7 @@ export default function PaymentPage() {
         name: "TeamGallery",
         description: "Buy 5 Extra Image Slots",
         handler: async function (response: any) {
-          const verifyRes = await fetch("http://localhost:4000/api/payments/verify", {
+          const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify`, {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export default function PaymentPage() {
         // 🟢 Set retry state to true
         setIsRetry(true); 
 
-        await fetch("http://localhost:4000/api/payments/fail", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/fail`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",

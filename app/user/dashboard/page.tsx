@@ -21,7 +21,7 @@ export default function UserMainDashboard() {
     async function fetchStats() {
       try {
         // 🟢 FIX: Added a timestamp to the URL to prevent browser caching
-        const res = await fetch(`http://localhost:4000/api/images?t=${Date.now()}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images?t=${Date.now()}`, {
           headers: { 
             "Authorization": `Bearer ${session?.user?.token}`,
             "Cache-Control": "no-cache" // Force fresh data

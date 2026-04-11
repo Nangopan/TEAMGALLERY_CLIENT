@@ -34,11 +34,11 @@ export default function PushSubscriptionManager() {
       }
 
       // Save to Backend
-      await fetch("http://localhost:4000/api/users/subscribe", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.user.token}`
+          "Authorization": `Bearer ${(session as any)?.user?.token}`
         },
         body: JSON.stringify(sub)
       });
