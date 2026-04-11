@@ -16,7 +16,7 @@ export default function NotificationBell() {
   const fetchNotifications = async () => {
     if (!session?.user?.token) return;
     try {
-      const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/notifications", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         headers: { "Authorization": `Bearer ${session.user.token}` }
       });
       if (res.ok) {

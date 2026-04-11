@@ -54,7 +54,7 @@ const handleUpdate = async (e: React.FormEvent) => {
   setLoading(true);
 
   try {
-    const res = await fetch("http://localhost:4000/api/users/change-password", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
       method: "PUT",
       headers: { 
         "Content-Type": "application/json",

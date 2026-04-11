@@ -47,7 +47,7 @@ export default function PODashboard() {
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:4000/api/organisations/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organisations/${id}`, {
       method: "DELETE",
       headers: { "Authorization": `Bearer ${session?.user?.accessToken}` }
     });
