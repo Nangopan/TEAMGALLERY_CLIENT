@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { UploadCloud, X, Loader2, UserPlus, ArrowLeft, AlertCircle } from "lucide-react"; // 🟢 Added AlertCircle
+import { UploadCloud, X, Loader2, UserPlus, ArrowLeft, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -13,19 +13,15 @@ export default function UploadPage() {
   const { data: session } = useSession();
   const router = useRouter();
   
-  // States
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [members, setMembers] = useState([]);
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [stats, setStats] = useState({ used: 0, quota: 5 });
-  
-  // 🟢 NEW: Error state for file validation
   const [fileError, setFileError] = useState("");
 
   const dashboardPath = session?.user?.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
 
-  // Fetch Org Members & Quota on Load
   useEffect(() => {
     if (!session?.user?.token) return;
 
@@ -38,13 +34,19 @@ export default function UploadPage() {
     }).then(res => res.json()).then(data => setStats({ used: data.used, quota: data.quota }));
   }, [session]);
 
+  // 🟢 NEW: Toggle function for selecting/deselecting users
+  const handleUserToggle = (userId: string) => {
+    setTaggedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId) 
+        : [...prev, userId]
+    );
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileError(""); // 🟢 Reset error on new selection
-    
+    setFileError("");
     if (e.target.files) {
       const rawFiles = Array.from(e.target.files);
-      
-      // 🟢 Validation: Identify non-image files
       const invalidFiles = rawFiles.filter(f => !f.type.startsWith("image/"));
       const validImages = rawFiles.filter(f => f.type.startsWith("image/"));
 
@@ -65,7 +67,7 @@ export default function UploadPage() {
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    if (selectedFiles.length <= 1) setFileError(""); // Clear error if all files removed
+    if (selectedFiles.length <= 1) setFileError("");
   };
 
   const handleUpload = async () => {
@@ -130,30 +132,65 @@ export default function UploadPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
-          <Card>
+          <Card className="rounded-[2rem] border-violet-100 shadow-sm">
             <CardHeader>
               <CardTitle>Configuration</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
+              <div className="space-y-3">
+                <label className="text-sm font-bold flex items-center gap-2 text-zinc-700 uppercase tracking-tighter">
                   <UserPlus className="h-4 w-4" /> Tag Members
                 </label>
-                <select 
-                  multiple 
-                  className="w-full border rounded-md p-2 h-40 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={taggedUsers}
-                  onChange={(e) => setTaggedUsers(Array.from(e.target.selectedOptions, o => o.value))}
-                >
-                  {members.map((m: any) => (
-                    <option key={m.id} value={m.id} className="p-1">{m.name}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-muted-foreground italic">Hold Ctrl (Cmd) to select multiple members.</p>
+
+                {/* 🟢 NEW: Tagged User Badges visible above the filter */}
+                {taggedUsers.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+                    {taggedUsers.map(id => {
+                      const member = members.find((m: any) => m.id === id);
+                      return (
+                        <span key={id} className="flex items-center gap-1 bg-violet-600 text-white pl-2 pr-1 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in zoom-in-95 duration-200">
+                          {member?.name}
+                          <button onClick={() => handleUserToggle(id)} className="hover:bg-white/20 rounded-md p-0.5 transition-colors">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 🟢 NEW: Interactive List instead of native multi-select */}
+                <div className="w-full border rounded-xl overflow-hidden bg-zinc-50/50">
+                  <div className="max-h-48 overflow-y-auto p-1 space-y-0.5">
+                    {members
+                      .filter((m: any) => m.id !== session?.user?.id) // 🟢 Filter out logged-in user
+                      .map((m: any) => {
+                        const isSelected = taggedUsers.includes(m.id);
+                        return (
+                          <div 
+                            key={m.id}
+                            onClick={() => handleUserToggle(m.id)}
+                            className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs font-semibold transition-all ${
+                              isSelected 
+                                ? 'bg-violet-100 text-violet-700 border border-violet-200' 
+                                : 'hover:bg-zinc-100 text-zinc-500'
+                            }`}
+                          >
+                            {m.name}
+                            {isSelected && <X className="h-3 w-3" />}
+                          </div>
+                        );
+                      })}
+                    {members.length <= 1 && (
+                       <p className="p-4 text-center text-[10px] text-zinc-400 font-medium">No other members available.</p>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">Click a member to tag/untag them.</p>
               </div>
 
               <Button 
-                className="w-full" 
+                className="w-full bg-violet-600 rounded-xl h-11 shadow-lg shadow-violet-100" 
                 onClick={handleUpload} 
                 disabled={selectedFiles.length === 0 || isUploading}
               >
@@ -166,7 +203,7 @@ export default function UploadPage() {
 
         <div className="lg:col-span-2 space-y-4">
           <div 
-            className={`border-2 border-dashed rounded-xl p-12 text-center hover:bg-gray-50 transition-all cursor-pointer relative ${fileError ? 'border-red-500 bg-red-50/10' : 'border-gray-200 hover:border-blue-400'}`}
+            className={`border-2 border-dashed rounded-[2.5rem] p-12 text-center hover:bg-gray-50 transition-all cursor-pointer relative ${fileError ? 'border-red-500 bg-red-50/10' : 'border-gray-200 hover:border-violet-400'}`}
           >
             <input 
               type="file" 
@@ -175,12 +212,11 @@ export default function UploadPage() {
               onChange={handleFileChange} 
               accept="image/*" 
             />
-            <UploadCloud className={`h-12 w-12 mx-auto mb-4 ${fileError ? 'text-red-400' : 'text-gray-400'}`} />
+            <UploadCloud className={`h-12 w-12 mx-auto mb-4 ${fileError ? 'text-red-400' : 'text-violet-400'}`} />
             <h3 className="text-lg font-medium">Click to browse or drag and drop</h3>
             <p className="text-sm text-gray-500">PNG, JPG, or JPEG (Max remaining: {stats.quota - stats.used})</p>
           </div>
           
-          {/* 🟢 Inline Validation Error Message */}
           {fileError && (
             <p className="text-[11px] text-red-500 font-bold flex items-center gap-1 ml-2 animate-in fade-in slide-in-from-top-1">
               <AlertCircle size={12} /> {fileError}
@@ -190,7 +226,7 @@ export default function UploadPage() {
           {selectedFiles.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="relative aspect-square rounded-lg border bg-white overflow-hidden group shadow-sm">
+                <div key={index} className="relative aspect-square rounded-3xl border bg-white overflow-hidden group shadow-sm">
                   <img 
                     src={URL.createObjectURL(file)} 
                     alt="preview" 
